@@ -22,9 +22,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🔧 Auto-select backend URL depending on environment
-  const BACKEND_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -37,18 +35,14 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      // Try parsing JSON safely
       let data;
       try {
         data = await res.json();
-      } catch (parseError) {
-        console.error("Response not JSON:", parseError);
-        alert("Unexpected server response. Check your backend.");
+      } catch {
+        alert("Unexpected server response. Check backend.");
         setLoading(false);
         return;
       }
-
-      console.log("Login response:", data);
 
       if (!res.ok) {
         alert(data.message || "Login failed");
@@ -58,10 +52,19 @@ export default function LoginPage() {
 
       // ✅ If 2FA is enabled → go to OTP page
       if (data.twoFA?.enabled) {
-        router.push(`/otp?tempToken=${data.tempToken}`);
+        const { method, email: twoFAEmail, phone, app } = data.twoFA;
+        const contact = method === "email" ? twoFAEmail : phone || "";
+        const query = new URLSearchParams({
+          tempToken: data.tempToken,
+          method,
+          contact,
+          app: app || "",
+        }).toString();
+
+        router.push(`/otp?${query}`);
       } else {
         alert("✅ Login successful!");
-        router.push("/dashboard"); // or wherever your dashboard is
+        router.push("/dashboard"); // Redirect to dashboard
       }
     } catch (err) {
       console.error("Login error:", err);

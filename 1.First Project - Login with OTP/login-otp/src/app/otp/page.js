@@ -11,33 +11,41 @@ export default function OtpPage() {
   const router = useRouter();
 
   const [otp, setOtp] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("Enter your 6-digit verification code.");
   const [method, setMethod] = useState("");
   const [contact, setContact] = useState("");
+  const [appName, setAppName] = useState("");
   const [tempToken, setTempToken] = useState("");
   const [timeLeft, setTimeLeft] = useState(180);
   const [timerActive, setTimerActive] = useState(true);
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
   // ✅ Read query params on mount
   useEffect(() => {
     const m = searchParams.get("method");
     const c = searchParams.get("contact");
     const t = searchParams.get("tempToken");
+    const app = searchParams.get("app");
 
     setMethod(m || "");
     setContact(c || "");
     setTempToken(t || "");
+    setAppName(app || "");
 
+    // Dynamic message
     if (m === "email" && c) {
       setMessage(`A 6-digit code has been sent to your email: ${c}`);
     } else if (m === "sms" && c) {
       setMessage(`A 6-digit code has been sent to your phone number: ${c}`);
+    } else if (m === "app" && app) {
+      setMessage(`Open your ${app} authenticator app to get the 6-digit code.`);
     } else {
-      setMessage("Enter your 6-digit verification code");
+      setMessage("Enter your 6-digit verification code.");
     }
   }, [searchParams]);
 
-  // ✅ Countdown timer (3 minutes)
+  // ✅ Countdown timer
   useEffect(() => {
     if (!timerActive) return;
     if (timeLeft <= 0) {
@@ -53,7 +61,7 @@ export default function OtpPage() {
     if (!tempToken) return alert("Missing temporary token.");
 
     try {
-      const res = await fetch("/api/auth/verify-otp", {
+      const res = await fetch(`${BACKEND_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ otp, tempToken }),
@@ -62,10 +70,9 @@ export default function OtpPage() {
       const data = await res.json();
       if (!res.ok) return alert(data.message || "OTP verification failed");
 
-      // ✅ OTP correct → store JWT
       localStorage.setItem("token", data.token);
       alert("OTP verified successfully!");
-      router.push("/dashboard"); // go to dashboard
+      router.push("/dashboard");
     } catch (err) {
       console.error(err);
       alert("Something went wrong. Please try again.");
@@ -79,7 +86,7 @@ export default function OtpPage() {
     setOtp("");
 
     try {
-      const res = await fetch("/api/auth/resend-otp", {
+      const res = await fetch(`${BACKEND_URL}/api/auth/resend-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tempToken }),
@@ -88,7 +95,7 @@ export default function OtpPage() {
       const data = await res.json();
       if (!res.ok) return alert(data.message || "Failed to resend OTP");
 
-      setMessage(data.message || "A new OTP has been sent.");
+      setMessage(data.message || message);
     } catch (err) {
       console.error(err);
       alert("Something went wrong while resending OTP.");
