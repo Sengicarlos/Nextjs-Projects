@@ -17,6 +17,7 @@
     "dotevn": "^0.0.1-security",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.9.0",
     "mongoose": "^8.19.1"
   }
 }

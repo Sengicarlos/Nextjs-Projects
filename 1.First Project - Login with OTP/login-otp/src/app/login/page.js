@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,7 +51,6 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ If 2FA is enabled → go to OTP page
       if (data.twoFA?.enabled) {
         const { method, email: twoFAEmail, phone, app } = data.twoFA;
         const contact = method === "email" ? twoFAEmail : phone || "";
@@ -64,7 +64,7 @@ export default function LoginPage() {
         router.push(`/otp?${query}`);
       } else {
         alert("✅ Login successful!");
-        router.push("/dashboard"); // Redirect to dashboard
+        router.push("/dashboard");
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -74,20 +74,24 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    signIn("google", { callbackUrl: "/dashboard" });
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-sm bg-white shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-green-50 p-4">
+      <Card className="w-full max-w-sm bg-green-100 shadow-lg rounded-xl border border-green-200">
         <CardHeader className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Login to your account</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-green-900">Login to your account</CardTitle>
+              <CardDescription className="text-green-800">
                 Enter your email and password to access your account
               </CardDescription>
             </div>
             <CardAction>
               <Link href="/signup">
-                <Button variant="link" size="sm">
+                <Button variant="link" size="sm" className="text-green-700">
                   Sign Up
                 </Button>
               </Link>
@@ -98,7 +102,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="flex flex-col gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-green-900">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -106,15 +110,16 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="border-green-300 focus:border-green-500 focus:ring-green-300"
               />
             </div>
 
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-green-900">Password</Label>
                 <a
                   href="#"
-                  className="ml-auto text-sm text-blue-600 underline-offset-4 hover:underline"
+                  className="ml-auto text-green-700 text-sm underline-offset-4 hover:underline"
                 >
                   Forgot your password?
                 </a>
@@ -125,14 +130,24 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="border-green-300 focus:border-green-500 focus:ring-green-300"
               />
             </div>
 
             <CardFooter className="flex flex-col gap-2 mt-2">
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full bg-green-700 hover:bg-green-800 text-white"
+                disabled={loading}
+              >
                 {loading ? "Logging in..." : "Login"}
               </Button>
-              <Button variant="outline" className="w-full">
+
+              <Button
+                variant="outline"
+                className="w-full border-green-700 text-green-700 hover:bg-green-200"
+                onClick={handleGoogleLogin}
+              >
                 Login with Google
               </Button>
             </CardFooter>
